@@ -1,0 +1,214 @@
+---
+title: "HMD Analysis To Calculate Premature Mortality Globally"
+author: "Mathew Kiang"
+date: "2/15/2018"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+We want to be able to look at the county SMRs, convert them to age-standardized premature mortality rates, and compare the rates of counties with that of other countries. This file just takes the Human Mortality Database files and calculates the age-standardized premature mortality rate for a bunch of different counties over the same time period. Because not every county has 2010-2015 data (i.e., some countries end in 2013 or 2014), we will calculate whatever rate we have for that period and then take the "average" annual rate. 
+
+## Set up
+
+All countries have their own files. All files have the same structure.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+
+## Helper functions
+read_hmd_file <- function(f) {
+    temp_df <- read_table2(f, skip = 4, 
+                           col_names = c("year", "age", "female", 
+                                         "male", "total"), 
+                           col_types = "ccnnn", na = c("NA", "."))
+    temp_df$country <- str_split(f, "\\.|//")[[1]][[3]]
+    
+    return(temp_df)
+}
+
+## Get a list of death and population files
+death_files <- list.files(paste0("./data_raw/", 
+                                 "human_mortality_database/", 
+                                 "Deaths_5x1/"), 
+                          full.names = TRUE)
+
+pop_files <- list.files(paste0("./data_raw/", 
+                               "human_mortality_database/", 
+                               "Population5/"), 
+                        full.names = TRUE)
+```
+
+## Deaths
+Note that for some years, the boundaries changed so there are duplicate counts of before (`-`) and after (`+`). I just remove the `+`/`-` and take the average. We also drop the female and male columns and just use total.
+
+```{r}
+deaths_df <- bind_rows(
+    map(death_files, ~read_hmd_file(.x))
+) %>% 
+    rename(deaths = total) %>% 
+    mutate(year = as.integer(gsub("\\+|\\-", "", year))) %>% 
+    group_by(year, age, country) %>% 
+    mutate_all(mean) %>% 
+    ungroup() %>% 
+    select(-female, -male)
+
+print(deaths_df, n = 10)
+```
+
+## Population
+Again, some years had boundary changes with `-` indicating before and `+` indicating after the boundary change for that year. We import year as a character, remove the symbol, and take the average for that year. 
+
+
+```{r}
+pops_df <- bind_rows(
+    map(pop_files, ~read_hmd_file(.x))
+) %>% 
+    rename(population = total) %>% 
+    mutate(year = as.integer(gsub("\\+|\\-", "", year))) %>% 
+    group_by(year, age, country) %>% 
+    mutate_all(mean) %>% 
+    ungroup() %>% 
+    select(-female, -male)
+
+print(pops_df, n = 10)
+```
+
+## Combine them
+```{r}
+hmd_data <- pops_df %>% 
+    left_join(deaths_df) %>% 
+    select(year, age, country, deaths, population)
+
+print(hmd_data, n = 10)
+```
+
+## Recode age to match the standard pops
+```{r}
+std_pop <- narcan::std_pops %>% 
+    filter(standard == "s204") %>% 
+    select(age, age_cat, pop_std)
+
+print(std_pop)
+```
+
+So we need to collapse the `0` and `1-4` groups of the HMD data into one group and all the `85+` groups into one group.
+
+```{r}
+## First, make a new column with the first number of the age category
+hmd_data <- hmd_data %>% 
+    mutate(age_orig = age, 
+           age = as.integer(
+               unlist(
+                   lapply(
+                       str_split(age_orig, 
+                                 pattern = "\\-|\\+"), 
+                       function(x) x[[1]])
+                   )
+               )
+           )
+
+head(hmd_data)
+```
+
+```{r}
+## Now create a new collapsed age column
+hmd_data <- hmd_data %>% 
+    mutate(new_age = case_when(
+        age <= 1 ~ 0L, 
+        age >= 85 ~ 85L, 
+        TRUE ~ age
+    ))
+
+print(hmd_data, n = 25)
+```
+
+```{r, warning=FALSE, message=FALSE}
+## Now collapse according to new age column
+hmd_data <- hmd_data %>% 
+    group_by(country, year, new_age) %>% 
+    summarize(population = sum(population), 
+              deaths = sum(deaths)) %>% 
+    rename(age = new_age) %>% 
+    left_join(std_pop, by = "age") %>% 
+    ungroup()
+
+head(hmd_data)
+```
+
+## Calculate average premature mortality between 2010-2015
+
+Because not every country has all observations between 2010 and 2015, we'll just calculate premature mortality for this period for all years that are observed and then take the average. 
+
+```{r}
+sub_df <- hmd_data %>% 
+    filter(year >= 2010, 
+           year <= 2015, 
+           age < 65) 
+
+age_specific_rates <- sub_df %>% 
+    narcan::calc_asrate_var(prem_death, 
+                            death_col = deaths, 
+                            pop_col = population)
+
+head(age_specific_rates)
+```
+
+```{r}
+age_std_rates <- age_specific_rates %>% 
+    group_by(country, year) %>% 
+    summarize(prem_std_rate = weighted.mean(prem_death_rate, pop_std)) %>% 
+    ungroup()
+```
+
+```{r}
+average_premature_mortality <- age_std_rates %>% 
+    group_by(country) %>% 
+    summarize(avg_prem = mean(prem_std_rate, na.rm = TRUE), 
+              n_years = n())
+```
+
+## Add useful names
+To get more useful names, we will cycle through the death files and extract the country name which should be on the first line.
+
+```{r}
+country_name <- NULL
+country_abb <- NULL
+
+for (f in death_files) {
+    cname <- strsplit(
+        read_lines(f, n_max = 1), 
+        split = ",")[[1]][[1]]
+    
+    cabb <-  str_split(f, "\\.|//")[[1]][[3]]
+    
+    country_name <- c(country_name, cname)
+    country_abb  <- c(country_abb, cabb)
+}
+
+c_map <- tibble(country_name, country_abb)
+```
+
+```{r}
+average_premature_mortality <- average_premature_mortality %>% 
+    left_join(c_map, by = c("country" = "country_abb")) %>% 
+    arrange(avg_prem)
+
+knitr::kable(average_premature_mortality %>% 
+                 select(country_name, n_years, avg_prem), 
+             digits = 1, 
+             col.names = c( "Country", "Years (N)", "Average Premature Mortality Rate"))
+```
+
+## Save
+```{r}
+write.csv(average_premature_mortality, 
+          "./data_working/hmd_countries_average_prem.csv", 
+          row.names = FALSE)
+```
+

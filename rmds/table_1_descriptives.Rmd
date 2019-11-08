@@ -1,0 +1,118 @@
+---
+title: "Table 1 Descriptives"
+author: "Mathew Kiang"
+date: "11/4/2017"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Getting total death counts
+```{r, cache=TRUE}
+cmf_extract <- readRDS("./data_working/extracted_cmf_2010_to_2015.RDS")
+
+cmf_extract %>% 
+    filter(nhw == 1 | nhb == 1, 
+           age12 < 10) %>% 
+    group_by(nhw) %>% 
+    summarize(sum(n_deaths)) %>% 
+    knitr::kable()
+```
+
+## Getting total population counts
+```{r, cache=TRUE}
+pop_extract <- readRDS("./data_working/extracted_pop_2010_to_2015.RDS")
+
+pop_extract %>% 
+    filter(nhw == 1 | nhb == 1, 
+           age12 < 10) %>% 
+    group_by(nhw) %>% 
+    summarize(sum(pop)) %>% 
+    knitr::kable()
+```
+
+
+## Getting county death summary stats
+```{r, cache=TRUE}
+cmf_extract %>% 
+    filter(nhw == 1 | nhb == 1, 
+           age12 < 10) %>% 
+    group_by(nhw, fipschar) %>% 
+    summarize(deaths = sum(n_deaths)) %>% 
+    group_by(nhw) %>% 
+    summarize(min = min(deaths), 
+              p050 = quantile(deaths, .05), 
+              p500 = quantile(deaths, .5), 
+              p950 = quantile(deaths, .95), 
+              max = max(deaths)) %>% 
+    knitr::kable()
+```
+
+## Getting county population summary stats
+```{r, cache=TRUE}
+pop_extract %>% 
+    filter(nhw == 1 | nhb == 1, 
+           age12 < 10) %>% 
+    group_by(nhw, fipschar) %>% 
+    summarize(pop = sum(pop)) %>% 
+    group_by(nhw) %>% 
+    summarize(min = min(pop), 
+              p050 = quantile(pop, .05), 
+              p500 = quantile(pop, .5), 
+              p950 = quantile(pop, .95), 
+              max = max(pop)) %>% 
+    knitr::kable()
+```
+
+
+## SMR descriptive stats
+```{r}
+prem <- readRDS("./data_working/premature_working_data.RDS")
+
+prem %>% 
+    mutate(smr = observed / expected) %>% 
+    group_by(black) %>% 
+    summarize(min = min(smr), 
+              p050 = quantile(smr, .05), 
+              p500 = quantile(smr, .5), 
+              p950 = quantile(smr, .95), 
+              max = max(smr)) %>% 
+    knitr::kable()
+```
+
+## SMR predictions
+```{r}
+predicted_smrs <- readRDS('./data_working/modeled_and_raw_smrs.RDS')
+
+predicted_smrs %>% 
+    filter(model_name != "raw") %>% 
+    group_by(param, model_name) %>% 
+    summarize(min = min(exp_p500), 
+              p050 = quantile(exp_p500, .05), 
+              p500 = quantile(exp_p500, .5), 
+              p950 = quantile(exp_p500, .95), 
+              max = max(exp_p500)) %>% 
+    arrange(desc(model_name), desc(param)) %>% 
+    knitr::kable()
+```
+
+## Relative risk
+```{r}
+load("./data_working/residual_disparities_data.RData")
+
+resid_df %>% 
+    filter(disp_type == "total") %>% 
+    mutate(exp_p500 = exp(p500)) %>% 
+    group_by(model_name) %>% 
+    summarize(min = min(exp_p500), 
+              p050 = quantile(exp_p500, .05), 
+              p500 = quantile(exp_p500, .5), 
+              p950 = quantile(exp_p500, .95), 
+              max = max(exp_p500)) %>% 
+    arrange(model_name) %>% 
+    knitr::kable()
+```
+

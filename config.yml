@@ -1,0 +1,47 @@
+# Config file for shared components paper. A single place where we can
+# specify if we want to keep intermediate files (and if so, which ones),
+# years we want to do analysis, location of processed and intermediate files,
+# etc.
+
+# You can make your own config (everything inherits from `default` so just
+# change what you want), and then set it as a global in your own computer:
+# `Sys.setenv(R_CONFIG_ACTIVE = "mk")`
+#
+# or you can use config::get(config = "mk"); however, you'll need to set it
+# every time you run the code so the global setting is preferred.
+
+default:
+  ## Years
+  start_year: 2010  # Year to start
+  end_year:   2015  # Year to end
+
+  ## API key:
+  ## Request a key here: http://api.census.gov/data/key_signup.html
+  ## Then change install_key to true for at least one run. 
+  ## You should only need to install the API key once per machine.
+  acs_api_key: 'REQUEST_AN_API_KEY' # API for ACS vars
+  install_key: false
+
+  ## Directories
+  raw_dir:  './data_raw'        # Where to save unprocessed data
+  data_dir: './data_working'    # Where to save processed data
+  fit_dir:  '/stanfit_objects'  # Where to save stanfit objects
+  sum_dir:  './stanfit_summ'    # Where to save stanfit summaries
+  plot_dir: './../plots'        # Where to save plots
+  
+  ## Stan / modeling code
+  stan_code: './stan_code'      # Where we are keeping stan files
+  model1: 'm0s_no_covar.stan'   # Name of model 1 (state effect, no covar)
+  model2: 'm1s_one_var.stan'    # Name of model 2 (state effect, 1 covar)
+
+  ## Files to save
+  save_full_adj: false      # Save entire adj of counties (after cleaning)?
+  save_winbugs_adj: true    #
+  
+  save_plots_as_pdf: true   # Plots will save as TIFF (plos format). Also pdf?
+
+# This config version is for me to debug. Keeps original files so I don't
+# need to keep downloading over and over.
+mk:
+  save_full_adj: true
+  acs_api_key: "ENTER YOUR KEY" # API for ACS vars
