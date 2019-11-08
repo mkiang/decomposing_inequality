@@ -7,9 +7,11 @@ output:
 
 # Decomposition of the US black/white inequality in premature mortality, , 2010–2015: an observational study
 
+<center>
 ```{r echo=FALSE, out.width = "650px", fig.align='center'}
 knitr::include_graphics("./plots/header.jpg")
 ```
+</center>
 
 # Introduction
 
@@ -24,9 +26,9 @@ Please submit issues [via Github](https://github.com/mkiang/decomposing_inequali
 Due to limitations on sharing the restricted-access data, this pipeline is not fully reproducible. To reproduce the pipeline, you must have the restricted-access compressed mortality files and the accompanying population estimates. Specify the path to these files in the `04_extracting_cmf_data.R` script in lines 64 and 72. 
 
 # Disclaimer
-Since completion of this project, there have been significant advances in the underlying software packages. For example, `stan` [now allows for parallel processing *within a single chain*](https://github.com/stan-dev/math/wiki/Threading-Support), which should substantially reduce computation time. In addition, there has been significant development in estimating a spatial conditional autoregressive using `stan` (e.g., [`cor_car`](https://rdrr.io/cran/brms/man/cor_car.html)). 
+Since completion of this project, there have been significant advances in the underlying software packages. For example, `stan` [now allows for parallel processing *within a single chain*](https://github.com/stan-dev/math/wiki/Threading-Support), which should substantially reduce computation time. In addition, there has been significant development in estimating a spatial conditional autoregressive using `stan` (e.g., [`cor_car()`](https://rdrr.io/cran/brms/man/cor_car.html) in the `brms` package). Members of the `stan` team themselves have [published an example](https://doi.org/10.1016/j.sste.2019.100301) that did not exist when this project was underway.
 
-This code should be considered a **starting point** in future project development. Modernizing the code used in this project will likely decrease the computational burden substantially. 
+All that to say, this code should be considered a **starting point** in future project development. Modernizing the code used in this project will likely decrease the computational burden substantially. 
 
 # Requirements
 ## Restricted-access compressed mortality files
@@ -50,7 +52,7 @@ Code files beginning with `50_` were used internally for diagnostic purposes but
 # Acknowledgement
 Special thanks to [Max Joseph](https://mbjoseph.github.io/) who freely provided his [`stan` conditional autoregressive code](https://github.com/mbjoseph/CARstan) online ([doi: 10.5281/zenodo.210407](https://doi.org/10.5281/zenodo.210407)). 
 
-Interested readers should see his [official `stan` case study](https://mc-stan.org/users/documentation/case-studies/mbjoseph-CARStan.html) and another [ICAR `stan` case study here](https://mc-stan.org/users/documentation/case-studies/icar_stan.html).
+Interested readers should see his [official `stan` case study](https://mc-stan.org/users/documentation/case-studies/mbjoseph-CARStan.html), another [ICAR `stan` case study here](https://mc-stan.org/users/documentation/case-studies/icar_stan.html), and a [paper using ICAR by members of the `stan` team](https://doi.org/10.1016/j.sste.2019.100301).
 
 # Authors
 - [Mathew Kiang](https://mathewkiang.com) (![Github](http://i.imgur.com/9I6NRUm.png): [mkiang](https://github.com/mkiang) | ![Twitter](http://i.imgur.com/wWzX9uB.png): [\@mathewkiang](https://twitter.com/mathewkiang))

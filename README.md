@@ -3,7 +3,11 @@
 
 # Decomposition of the US black/white inequality in premature mortality, , 2010–2015: an observational study
 
+<center>
+
 <img src="./plots/header.jpg" width="650px" style="display: block; margin: auto;" />
+
+</center>
 
 # Introduction
 
@@ -43,11 +47,14 @@ chain*](https://github.com/stan-dev/math/wiki/Threading-Support), which
 should substantially reduce computation time. In addition, there has
 been significant development in estimating a spatial conditional
 autoregressive using `stan` (e.g.,
-[`cor_car`](https://rdrr.io/cran/brms/man/cor_car.html)).
+[`cor_car()`](https://rdrr.io/cran/brms/man/cor_car.html) in the `brms`
+package). Members of the `stan` team themselves have [published an
+example](https://doi.org/10.1016/j.sste.2019.100301) that did not exist
+when this project was underway.
 
-This code should be considered a **starting point** in future project
-development. Modernizing the code used in this project will likely
-decrease the computational burden substantially.
+All that to say, this code should be considered a **starting point** in
+future project development. Modernizing the code used in this project
+will likely decrease the computational burden substantially.
 
 # Requirements
 
@@ -89,9 +96,11 @@ code](https://github.com/mbjoseph/CARstan) online
 ([doi: 10.5281/zenodo.210407](https://doi.org/10.5281/zenodo.210407)).
 
 Interested readers should see his [official `stan` case
-study](https://mc-stan.org/users/documentation/case-studies/mbjoseph-CARStan.html)
-and another [ICAR `stan` case study
-here](https://mc-stan.org/users/documentation/case-studies/icar_stan.html).
+study](https://mc-stan.org/users/documentation/case-studies/mbjoseph-CARStan.html),
+another [ICAR `stan` case study
+here](https://mc-stan.org/users/documentation/case-studies/icar_stan.html),
+and a [paper using ICAR by members of the `stan`
+team](https://doi.org/10.1016/j.sste.2019.100301).
 
 # Authors
 
