@@ -3,11 +3,11 @@
 
 # Decomposition of the US black/white inequality in premature mortality, , 2010–2015: an observational study
 
-<center>
+<p align="center">
 
 <img src="./plots/header.jpg" width="650px" style="display: block; margin: auto;" />
 
-</center>
+</p>
 
 # Introduction
 
@@ -52,7 +52,7 @@ package). Members of the `stan` team themselves have [published an
 example](https://doi.org/10.1016/j.sste.2019.100301) that did not exist
 when this project was underway.
 
-All that to say, this code should be considered a **starting point** in
+All that to say, this code should be considered a **starting point** for
 future project development. Modernizing the code used in this project
 will likely decrease the computational burden substantially.
 
